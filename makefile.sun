@@ -1,0 +1,225 @@
+# *****************************************************************************
+#
+#     Makefile for Sun ArgTool
+#
+#      Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# *****************************************************************************
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+# *****************************************************************************
+
+CFLAGS	      = -fsingle -g -DDEBUG
+
+FC            = f77
+
+F77           = f77
+
+FFLAGS	      = -xl -Nl40 -g
+
+DEST	      = .
+
+EXTHDRS	      = /usr/include/ctype.h \
+		/usr/include/floatingpoint.h \
+		/usr/include/malloc.h \
+		/usr/include/math.h \
+		/usr/include/stdio.h \
+		/usr/include/stdlib.h \
+		/usr/include/string.h \
+		/usr/include/sys/ieeefp.h \
+		/usr/include/sys/stdtypes.h
+
+HDRS	      = argtool.h
+
+LDFLAGS	      = -L/usr/local/lib -Bstatic
+
+SLIBS	      = -lm
+
+ULIBS         = 
+
+LIBRARY	      = libargtool.a
+
+MAKEFILE      = Makefile
+
+PROGRAM       = argtool
+
+OBJS	      = argtool.o \
+                collapse.o \
+		detab.o \
+		error.o \
+		findargs.o \
+		ftnfmt.o \
+		machine.o \
+		marker.o \
+		markerf.o \
+		parsecmd.o \
+		parselin.o \
+		parsetab.o \
+		pb.o \
+		pf.o \
+		saveinfo.o \
+		spltpath.o \
+		strdup.o
+
+PRINT	      = pr
+
+LINKER	      = f77
+
+SRCS	      = argtool.arg \
+                collapse.c \
+		detab.c \
+		error.c \
+		findargs.f \
+		ftnfmt.c \
+		machine.c \
+		marker.c \
+		markerf.c \
+		parsecmd.c \
+		parselin.c \
+		parsetab.c \
+		pb.c \
+		pf.c \
+		saveinfo.c \
+		spltpath.c \
+		strdup.c
+
+DEMOS         = demo \
+                demo2 \
+                demo5 
+
+DEMOSRCS      = demo.arg \
+                demo2.arf
+
+DEMOOBJS      = demo.o \
+                demo2.o
+
+SUFFIX        = .arg:sC .arf:sF .for:sF
+
+LIBS          = $(LIBRARY)
+
+.SUFFIXES: .arg .arf .for
+
+.arf.for:
+	argtool $*.arf -ftn
+
+.arg.c:
+	argtool $*.arg -c
+	
+.arg.o:
+	argtool $*.arg -c
+	$(CC) $(CFLAGS) -c $*.c
+
+.arf.o:
+	argtool $*.arf -ftn
+	$(FC) $(FFLAGS) -c $*.for
+
+.for.o:
+	$(FC) $(FFLAGS) -c $*.for
+
+all:		$(LIBRARY) $(PROGRAM) $(DEMOS)
+
+$(DEMOS):       $(PROGRAM) $(LIBRARY) $(DEMOOBJS)
+		@echo -n "Building C demo ... "
+		@$(LINKER) $(LDFLAGS) demo.o \
+			$(ULIBS) $(LIBS) $(SLIBS) $(EXTLIBS) 	\
+			-o demo -Bstatic
+		@echo -n "Building FORTRAN demo ... "
+		@$(LINKER) $(LDFLAGS) demo2.o 	\
+			$(ULIBS) $(LIBS) $(SLIBS) $(EXTLIBS) 	\
+			-o demo2 -Bstatic
+		@echo "done"
+
+$(DEMOOBJS):    $(DEMOSRCS)
+
+$(PROGRAM):     $(LIBS) $(ULIBS) $(GLIBS)
+		@echo -n "Loading $(PROGRAM) ... "
+		@$(LINKER) $(LDFLAGS) $(PROGRAM).o 	\
+			$(ULIBS) $(LIBS) $(SLIBS) $(EXTLIBS) 	\
+			-o $(PROGRAM) -Bstatic
+		@echo "done"
+
+$(LIBRARY):	$(OBJS)
+		@echo -n "Loading $(LIBRARY) ... "
+		@ar cru $(LIBRARY) $(OBJS)
+		@ar d $(LIBRARY) argtool.o
+		@ranlib $(LIBRARY)
+		@echo "done"
+
+clean:;		@rm -f $(OBJS) $(DEMOS) $(DEMOOBJS) $(PROGRAM)
+
+depend:;	@mkmf -f $(MAKEFILE) LIBRARY=$(LIBRARY) DEST=$(DEST)
+
+extract:;	@ar xo $(DEST)/$(LIBRARY)
+		@rm -f __.SYMDEF
+
+index:;		@ctags -wx $(HDRS) $(SRCS)
+
+install:	$(PROGRAM) $(LIBRARY) clean
+		@echo Installing $(LIBRARY) in $(DEST)
+		@install $(LIBRARY) $(DEST)
+		@ranlib $(DEST)/$(LIBRARY)
+		@echo Installing $(PROGRAM) in $(DEST)
+		@install -s $(PROGRAM) $(DEST)
+
+library:        $(LIBRARY)
+
+print:;		@$(PRINT) $(HDRS) $(SRCS)
+
+lprint:;	fold -w 132 $(HDRS) $(SRCS) | rsh adiron /usr/local/bin/imprint -J -Pip -L -h$(PROGRAM)
+
+tags:           $(HDRS) $(SRCS); @ctags $(HDRS) $(SRCS)
+
+update:         $(DEST)/$(LIBRARY) $(DEST)/$(PROGRAM)
+
+$(DEST)/$(PROGRAM): $(SRCS) $(LIBS) $(HDRS) $(EXTHDRS)
+		@make -f $(MAKEFILE) DEST=$(DEST) install
+
+$(DEST)/$(LIBRARY): $(SRCS) $(HDRS) $(EXTHDRS)
+		@-ar xo $(DEST)/$(LIBRARY)
+		@make -f $(MAKEFILE) DEST=$(DEST) install clean
+###
+argtool.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h /usr/include/stdlib.h /usr/include/malloc.h
+collapse.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h argtool.h
+detab.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h /usr/include/stdlib.h /usr/include/malloc.h \
+	argtool.h
+error.o: /usr/include/stdio.h argtool.h
+findargs.o: argtool.inc
+ftnfmt.o: /usr/include/stdio.h argtool.h
+machine.o: /usr/include/stdio.h argtool.h
+marker.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h argtool.h
+markerf.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h argtool.h
+parsecmd.o: /usr/include/math.h /usr/include/floatingpoint.h \
+	/usr/include/sys/ieeefp.h /usr/include/ctype.h /usr/include/string.h \
+	/usr/include/sys/stdtypes.h /usr/include/stdio.h \
+	/usr/include/stdlib.h /usr/include/malloc.h argtool.h
+parselin.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h argtool.h
+parsetab.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h /usr/include/stdlib.h argtool.h
+pb.o: /usr/include/math.h /usr/include/floatingpoint.h \
+	/usr/include/sys/ieeefp.h /usr/include/ctype.h /usr/include/string.h \
+	/usr/include/sys/stdtypes.h /usr/include/stdio.h \
+	/usr/include/stdlib.h /usr/include/malloc.h argtool.h
+pf.o: /usr/include/math.h /usr/include/floatingpoint.h \
+	/usr/include/sys/ieeefp.h /usr/include/ctype.h /usr/include/string.h \
+	/usr/include/sys/stdtypes.h /usr/include/stdio.h \
+	/usr/include/stdlib.h /usr/include/malloc.h argtool.h
+saveinfo.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/stdio.h /usr/include/stdlib.h argtool.h
+spltpath.o: /usr/include/string.h /usr/include/sys/stdtypes.h argtool.h
+strdup.o: /usr/include/string.h /usr/include/sys/stdtypes.h \
+	/usr/include/ctype.h /usr/include/malloc.h argtool.h

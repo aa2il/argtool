@@ -1,0 +1,83 @@
+c *****************************************************************************
+c
+c    DEMO.ARF - Argument Tool test prog - FORTRANN Version
+c
+c    Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+c
+c *****************************************************************************
+c
+c   This program is free software: you can redistribute it and/or modify
+c   it under the terms of the GNU General Public License as published by
+c   the Free Software Foundation, either version 3 of the License, or
+c   (at your option) any later version.
+c
+c   This program is distributed in the hope that it will be useful,
+c   but WITHOUT ANY WARRANTY; without even the implied warranty of
+c   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+c   GNU General Public License for more details.
+c
+c *****************************************************************************
+c
+      program  demo2
+c
+c *****************************************************************************
+c
+c Var declarations
+      use, intrinsic :: ISO_C_BINDING
+      integer  dummy,i
+c
+c The table must be after local var defs but before and executable code (including DATA statements)
+c
+c The convention is <> for required params, [] for optional, ... for repeated
+c
+c Vars are declared as
+c  <usage_name>   <type>   <var_name>  [init_value]   [# Comment]
+c
+c Flags are declared as
+c  <-flag> [# Comment]
+c
+c There is a blank line betwen flag groups.  
+c Here is an example.....
+$ARG_TABLE
+
+<prog_name> character*60  pgm_name  'This is a test'  # Required string
+[n]         integer   n 5     # Required integer
+[f]         real f 1.0   # Optional float
+
+[-junk]
+<i99>...    integer  i99(6)         # Repeated integer
+
+[-test]
+<st>...     character*20   st(5)    # Repeated string
+
+# [-help]     # FORTRAN arg tool demo program
+
+$END_TABLE
+c
+c Executable starts after the table
+c
+c This program just reports the arg vars after they are retrieved
+      write(*,*) 'Before:'
+      write(*,*) 'pgm_name=',pgm_name
+      write(*,*) 'n=',n
+      write(*,*) 'f=',f
+c
+c This line retrives the command line ars & associates them with the local vars
+      call find_args
+c
+c MARKER_FTN tells how many times a repeated arg was given
+      write(*,*) 'After:'
+      write(*,*) 'pgm_name=',pgm_name
+      write(*,*) 'n=',n
+      write(*,*) 'f=',f
+      write(*,*) 'MARKER(i99)=',MARKER_FTN('i99')
+      do i=1,5
+         write(*,*) 'i99(',i,')=',i99(i)
+      end do
+      write(*,*) 'MARKER(st)= ',MARKER_FTN('st')
+      do i=1,5
+         write(*,*) 'st( ',i,')=',st(i)
+      end do
+
+      end
+

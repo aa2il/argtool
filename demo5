@@ -1,0 +1,57 @@
+#! /bin/csh -f
+# *****************************************************************************
+#
+#   DEMO5 - Demo batch job for C-SHELL argtool 
+#
+#      Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# *****************************************************************************
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+# *****************************************************************************
+#
+# The file is broken into four parts
+#
+# *** We first declare the args - We need to skip this table to avoid errors ***
+#
+goto start
+
+$ARG_TABLE
+
+<dummy>        string dummy      # Required string
+
+[-test]                          # Test flag
+
+$END_TABLE
+#
+# *********************************************************************
+#
+# *** This is where we get the args ***
+#
+start:
+argtool $0 -csh /tmp/setargs$$ " $argv" -nh
+#gdb --args argtool $0 -csh /tmp/setargs$$ " $argv" -nh
+if ($status != 0) then
+	rm -f /tmp/setargs$$
+	exit $status
+endif
+source /tmp/setargs$$
+rm -f /tmp/setargs$$
+#
+# *********************************************************************
+#
+# *** This is the heart of the batcfh file - We would use the args here ***
+#
+echo "dummy=" $dummy
+echo "test_m=" $test_m
+if ($test_m == 1 ) echo "-test set"
+

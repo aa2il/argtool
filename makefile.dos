@@ -1,0 +1,159 @@
+# *****************************************************************************
+#
+#     Makefile for MSDOS ArgTool
+#
+#      Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# *****************************************************************************
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+# *****************************************************************************
+
+# Put raw sources files here
+SRCS =   argtool.c\
+         collapse.c\
+         detab.c\
+         error.c\
+         ftnfmt.c\
+         machine.c\
+         marker.c\
+         markerf.c\
+         parsecmd.c\
+         parselin.c\
+         parsetab.c\
+         pb.c\
+         pf.c\
+         saveinfo.c\
+         spltpath.c\
+         strdup.c\
+         findargs.for\
+         demo.arg\
+         demo2.arf\
+         demo3.arb
+
+# Put arg-tooled sources here
+SRCS2 =  demo.c\
+         demo2.for
+
+# Put subroutine objs here
+OBJS =   collapse.obj\
+         detab.obj\
+         error.obj\
+         ftnfmt.obj\
+         machine.obj\
+         marker.obj\
+         markerf.obj\
+         parsecmd.obj\
+         parselin.obj\
+         parsetab.obj\
+         pb.obj\
+         pf.obj\
+         saveinfo.obj\
+         spltpath.obj\
+         strdup.obj\
+         findargs.obj
+
+# Put main prog objs here
+OBJS2 =  argtool.obj
+         
+# Put exes here
+EXES  =  argtool.exe\
+         demo.exe\
+         demo2.exe
+
+# Compilers, etc.
+ARGTOOL = c:\jba\argtool\argtool
+
+LIBRARY = argtool.lib
+
+CC = cl
+
+FC = fl
+
+LINKER = link
+
+COPTS = /c /AL /Od /Zi /Zd /FPi87 /Ie:\argtool
+
+FOPTS = /c /AL /FPi87 /Ie:\argtool
+
+LNKOPTS = /E/NOD/NOE
+
+LIBS = $(LIBRARY)+e:\argtool\argtool+..\gpac4+llibc7+llibfor7c
+
+SUFFIX = .arg:sC .arf:sFOR .arb:sBAT
+
+.SUFFIXES: .arg .arf .arb
+
+.FOR.OBJ:
+   $(FC) $(FOPTS) $*.for
+
+.C.OBJ:
+   $(CC) $(COPTS) $*.c
+
+.ARG.C:
+   $(ARGTOOL) $*.arg -c
+
+.ARF.FOR:
+   $(ARGTOOL) $*.arf -ftn
+
+.ARB.BAT:
+   $(ARGTOOL) $*.arb -bat
+
+.ARG.OBJ:
+   $(ARGTOOL) $*.arg -c
+   $(CC) $(COPTS) $*.c
+
+.ARF.OBJ:
+   $(ARGTOOL) $*.arg -ftn
+   $(FC) $(FOPTS) $*.for
+
+#.ARB.OBJ:
+#   $(ARGTOOL) $*.arg -ftn
+#   $(FC) $(FOPTS) $*.for
+
+.OBJ.EXE:
+   $(LINKER) $(LNKOPTS) $*,,nul,$(LIBS);
+
+all: $(EXES) demo.c demo2.for
+
+$(EXES): $(OBJS2) $(LIBRARY)
+
+clean:
+   del *.obj
+   del *.exe
+   del *.lib
+   del demo.c
+   del demo2.for
+   del mark.doc
+
+$(LIBRARY): $(OBJS)
+      del $(LIBRARY)
+      lib @<<lib.lrf
+$*.lib
+y
+-+$(OBJS: = &^
+-+) 
+;
+<<KEEP
+      del lib.lrf
+
+# The demo stuff is special because it depends on the argtool
+demo.c: demo.arg argtool.exe 
+
+demo2.for: demo2.arf argtool.exe
+
+demo.obj: demo.c
+
+demo2.obj: demo2.for
+
+demo3.bat: demo3.arb
+

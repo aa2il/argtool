@@ -1,0 +1,58 @@
+#! /bin/sh
+# the next line restarts using wish \
+exec wish "$0" "$@"
+# *****************************************************************************
+#
+#   DEMO6 - Demo batch job for TCL argtool 
+#
+#      Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# *****************************************************************************
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+# *****************************************************************************
+#
+# The file is broken into four parts
+#
+# *** We first declare the args - We need to skip this table to avoid errors ***
+#
+if { 0 } {
+
+$ARG_TABLE
+
+<dummy>        string dummy      # Required string
+
+[-test]                          # Test flag
+
+$END_TABLE
+
+}
+
+# *********************************************************************
+#
+# *** This is where we get the args ***
+#
+exec argtool $argv0 -tcl /tmp/setargs_$argv0 " $argv" -nh
+source /tmp/setargs_$argv0
+exec rm -f /tmp/setargs_$argv0
+
+# *********************************************************************
+#
+# *** This is the heart of the batcfh file - We would use the args here ***
+#
+puts "dummy=$dummy"
+puts "test_m=$test_m"
+if { $test_m == 1 } {
+    puts "-test set"
+}
+
+exit

@@ -1,0 +1,79 @@
+#!/bin/tcsh
+# *****************************************************************************
+#
+#      CROSS_BUILD - Shell script to build for DOS on linux?????
+#
+#      Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# *****************************************************************************
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+# *****************************************************************************
+
+#set echo
+#set verbose
+
+rm -f demo.c
+
+set PROGRAM="argtool"
+set LIBRARY="libargtool"
+
+set SRC="*.c"
+set OBJ=""
+foreach i ($SRC)
+    set f=`parse $i`
+    set OBJ="$OBJ $f[2].o"
+end
+
+set LIBS=""
+
+if( 0 ) then
+    # Regular compilation
+    set CC="gcc"
+    set CFLAGS="-g"
+    set AR="ar"
+    set RANLIB="ranlib"
+
+else
+    # Cross-compilation for windows
+    set PROGRAM="$PROGRAM.exe"
+    set LIBRARY="$LIBRARY-cross"
+    set CC="i386-mingw32msvc-gcc -mms-bitfields"
+    set CFLAGS="-g -march=i586 -mcpu=i686 -mms-bitfields"
+
+    set PREFIX="/opt/cross-tools/i386-mingw32msvc/bin"
+    set AR="$PREFIX/ar"
+    set RANLIB="$PREFIX/ranlib"
+
+endif
+
+set LINKER="$CC"
+set LDFLAGS="-Bstatic"
+
+set LIBRARY="$LIBRARY.a"
+set LIBS="$LIBRARY"
+
+rm -f *.o  $PROGRAM
+
+set echo 
+
+echo Compiling ...
+$CC $CFLAGS -c $SRC
+
+echo Building library
+$AR cru $LIBRARY $OBJ
+$AR d $LIBRARY argtool.o
+$RANLIB $LIBRARY
+
+echo Linking ...
+$LINKER $LDFLAGS argtool.o $LIBS -o $PROGRAM
+

@@ -1,0 +1,116 @@
+#! /bin/csh -f
+# *****************************************************************************
+#
+#      INSTALL - Shell script to install argtool source for Unix
+#
+#      Copyright (C) 1993 - 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# *****************************************************************************
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+# *****************************************************************************
+
+set   ARG_SRC=~/argtool
+set   LIBS=~/lib
+set   PROGS=~/progs
+set   INCL=~/incl
+
+echo "Cleaning up distribution ..."
+cd $ARG_SRC
+rm -rf demo.c demo2.for demo2.f mark.doc *.obj *.exe *.lib *.olb *.jou setargs*
+
+#goto skip
+
+echo "Building argtool library ..."
+cd $LIBS
+rm -rf argtool
+mkdir argtool
+cd argtool
+ln -s $ARG_SRC/*.c .
+rm argtool.c
+ln -s $ARG_SRC/findargs.for findargs.f
+ln -s $ARG_SRC/*.h .
+ln -s $ARG_SRC/*.inc .
+cd ..
+
+set i=argtool
+	echo "Removing old objects from $EOSMACH/lib$i... "
+	if(! -d $EOSMACH ) mkdir $EOSMACH
+	cd $EOSMACH
+	rm -rf lib$i lib$i.a
+	mkdir lib$i
+	cd lib$i
+
+	# Create links to source code and new Makefile
+	echo "Creating new source links to $i and Makefile ... "
+	ln -s ../../$i/*.f .
+	ln -s ../../$i/*.c .
+	ln -s ../../$i/*.h .
+	ln -s ../../$i/*.inc .
+	eos_mkmf lib -install_dest .. -debug -template ~/templates/libtemplate
+
+	# Make new library
+	echo Making library $i...
+	make install
+	cd ..
+	ln -s lib$i-d.a lib$i.a
+
+echo "Updating headers ..."
+cd $INCL
+rm -rf argtool.*
+ln -s $ARG_SRC/*.h .
+ln -s $ARG_SRC/*.inc .
+
+echo "Building argtool ..."
+cd $PROGS
+rm -rf argtool
+mkdir argtool
+cd argtool
+ln -s $ARG_SRC/argtool.arg .
+jba_mkmf
+make install
+
+echo "Building demos ..."
+cd $PROGS/argtool
+rm -rf demo
+mkdir demo
+cd demo
+ln -s $ARG_SRC/demo.arg .
+jba_mkmf
+make
+demo
+echo "Press CR to continue ..."
+getline
+echo "RUNNING demo abc def xyz -j 10 20 30 -n 23 4.5"
+demo abc def xyz -j 10 20 30 -n 23 4.5
+
+cd $PROGS/argtool
+rm -rf demo2
+mkdir demo2
+cd demo2
+ln -s $ARG_SRC/demo2.arf .
+ln -s $ARG_SRC/argtool.inc .
+jba_mkmf
+make
+demo2
+echo "Press CR to continue ..."
+getline
+echo "Running demo2 abc 12 3.4 -junk 22 33 44 -test wxyz mnopqrst"
+demo2 abc 12 3.4 -junk 22 33 44 -test wxyz mnopqrst
+
+skip:
+
+echo "Building C-shell demo ..."
+cd ${ARG_SRC}
+chmod +x demo5
+demo5
+demo5 abc -test
